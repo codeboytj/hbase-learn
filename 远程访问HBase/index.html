@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>远程访问HBase - HBase学习笔记</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "\u8fdc\u7a0b\u8bbf\u95eeHBase";
+    var mkdocs_page_input_path = "\u8fdc\u7a0b\u8bbf\u95eeHBase.md";
+    var mkdocs_page_url = "/\u8fdc\u7a0b\u8bbf\u95eeHBase/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> HBase学习笔记</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">远程访问HBase</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#hbase">远程访问HBase</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#java">Java客户端配置</a></li>
+        
+            <li><a class="toctree-l3" href="#_1">服务器端配置</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">HBase学习笔记</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>远程访问HBase</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="hbase">远程访问HBase</h1>
+<p>在开发HBase程序时，需要在本地IDE进行调试。然而HBase却部署在云端，因此需要使用Java客户端程序远程访问HBase，客户端需要进行相应的配置。而为了让客户端程序通过外网访问顺利访问，服务器也要进行相应配置。然而在实际操作过程中遇到了很多的问题，这些问题大都与HBase的启动过程有关系。</p>
+<h2 id="java">Java客户端配置</h2>
+<p><code>${HBASE_HOME}/conf/hbase-site.xml</code>默认是没有任何配置的，HBase的默认配置都是从<code>hbase-common-x.x.x.jar</code>中的<code>hbase-default.xml</code>中读取出来的。HBase会默认调用监控着<code>127.0.0.1</code>上<code>2182</code>端口的zookeeper来获得HMaster的地址与端口，从而与HMaster进行更进一步的交互。为了与远程的zookeeper进行交互，需要配置<code>hbase.zookeeper.quorum</code>指定远程地址，<code>hbase.zookeeper.property.clientPort</code>指定远程端口。有两种方法进行配置：</p>
+<ul>
+<li>新建<code>src/main/resource/hbase-site.xml</code>文件，进行配置：</li>
+</ul>
+<pre><code>  &lt;property&gt;
+    &lt;name&gt;hbase.zookeeper.quorum&lt;/name&gt;
+    &lt;value&gt;远程ip&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;hbase.zookeeper.property.clientPort&lt;/name&gt;
+    &lt;value&gt;2181&lt;/value&gt;
+  &lt;/property&gt;
+</code></pre>
+
+<ul>
+<li>写死到代码里面：</li>
+</ul>
+<pre><code>configuration.set(&quot;hbase.zookeeper.quorum&quot;,&quot;远程ip&quot;);  //hbase 服务地址
+configuration.set(&quot;hbase.zookeeper.property.clientPort&quot;,&quot;2181&quot;); //端口号
+</code></pre>
+
+<p>第二种比较方便，但不利用类文件的迁移，推荐使用第一种方法。</p>
+<h2 id="_1">服务器端配置</h2>
+<h3 id="hostname">服务器的hostname</h3>
+<p>zookeeper会返回给客户端HMaster的地址。然而离奇的是，zookeeper返回的并不是<code>ip地址</code>，而是<code>hostname</code>。这给编写客户端的初学者造成了很大困扰，因为服务器的<code>hostname</code>并没有在往往都没有在客户端<code>/etc/hosts</code>文件中进行配置，DNS也无法进行解析。因此客户端出现的是一次又一次地重试，最后出现无法解析<code>hostname</code>的错误。因此，</p>
+<ul>
+<li>需要客户端的<code>/etc/hosts</code>文件中对<code>hostname</code>进行配置，解析到服务器的ip。</li>
+</ul>
+<p>当然，如果想要自己配置服务器的<code>hostname</code>，需要更改服务器端的<code>/etc/hostname</code>文件中进行配置，重启生效。</p>
+<h3 id="hmasterip">HMaster绑定的ip和端口</h3>
+<p>HMaster绑定ip和端口的时候，会读取<code>/etc/hosts</code>文件，解析出服务器对应的<code>hostname</code>对应的ip地址，绑定特定端口。最初的时候<code>hostname</code>对应的很可能是<code>127.0.0.1</code>上的端口，是服务器本地环路，外界无法访问。这时候，客户端在拿到HMaster地址之后，访问服务器的HMaster端口，会出现拒绝连接的错误。所以需要对服务器端的<code>/etc/hosts</code>文件进行配置：</p>
+<ul>
+<li>将<code>hostname</code>对应的ip改成实际的ip地址。</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/require.js"></script>
+      <script src="../search/search.js"></script>
+
+</body>
+</html>
