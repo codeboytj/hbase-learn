@@ -1,2 +1,5 @@
 site_name: HBase学习笔记
+pages:
+    - Home: 'index.md'
+    - 远程访问HBase: '远程访问HBase.md'
 theme: readthedocs
